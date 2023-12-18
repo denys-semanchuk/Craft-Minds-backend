@@ -9,7 +9,6 @@ export class UsersController {
   @Get("me")
   @UseGuards(AccessTokenGuard)
   async getUsersProfile() {
-    console.log("Hiiii");
     return "Denys"
   }
 }

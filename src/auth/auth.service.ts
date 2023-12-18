@@ -56,7 +56,7 @@ export class AuthService {
 
     await this.updateRefreshToken(user.id, tokens.refreshToken);
 
-    await this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
+    this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
 
     return { access_token: tokens.accessToken };
   }
@@ -126,10 +126,7 @@ export class AuthService {
       throw new ForbiddenException("Access denied");
     const tokens = await this.getTokens(userId, user.email);
     await this.updateRefreshToken(userId, tokens.refreshToken);
-    res.cookie('refresh_cookie', refreshToken, {
-      signed:true,
-      secure:true,
-    })
+    this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
     return { access_token: tokens.accessToken };
   }
 
