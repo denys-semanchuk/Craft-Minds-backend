@@ -7,19 +7,26 @@ import { Request } from "express";
 
 @Injectable()
 export class RefreshTokenStrategy extends PassportStrategy(Strategy, "jwt-refresh") {
-  constructor(private config: ConfigService) {
+  constructor(private readonly config: ConfigService) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: config.get("JWT_REFRESH_SECRET"),
-      passReqToCallback: true
+      jwtFromRequest: ExtractJwt.fromExtractors([RefreshTokenStrategy.extractJWT, ExtractJwt.fromAuthHeaderAsBearerToken()]),
+      ignoreExpiration: false,
+      secretOrKey: config.get("JWT_REFRESH_SECRET")
     });
   }
 
-  validate(req: Request, payload: any) {
-    const refreshToken = req.signedCookies.get("refresh_token");
+  private static extractJWT(req: Request): string | null {
+    if (
+      req.signedCookies &&
+      "refresh_token" in req.signedCookies &&
+      req.signedCookies.refresh_token.length > 0
+    ) {
+      return req.signedCookies.refresh_token;
+    }
+    return null;
+  }
 
-    req.headers["Authorization"] = refreshToken;
-
-    return { ...payload, refreshToken };
+  validate(payload: any) {
+    return payload
   }
 }

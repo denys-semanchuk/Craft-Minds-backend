@@ -62,17 +62,17 @@ export class AuthService {
   }
 
   async logout(userId: number) {
-    return this.prisma.user.update({ where: { id: userId }, data: { refreshToken: "" } });
+    this.prisma.user.update({ where: { id: userId }, data: { refreshToken: "" } });
   }
 
 
   async updateRefreshToken(userId: number, refreshToken: string) {
     const hashedRefreshToken = await argon.hash(refreshToken);
-    await this.prisma.user.update({ where: { id: userId }, data: { refreshToken: hashedRefreshToken } });
+    return this.prisma.user.update({ where: { id: userId }, data: { refreshToken: hashedRefreshToken } });
   }
 
 
-  async attachTokenCookie(key: string, value: string, res: Response) {
+  attachTokenCookie(key: string, value: string, res: Response) {
     return res.cookie(key, value, {
       httpOnly: true,
       signed: true,
@@ -121,12 +121,16 @@ export class AuthService {
       throw new ForbiddenException("Access denied");
 
     const refreshTokenMatches = await argon.verify(user.refreshToken, refreshToken);
-
+    console.log(user.refreshToken, refreshToken);
     if (!refreshTokenMatches)
       throw new ForbiddenException("Access denied");
     const tokens = await this.getTokens(userId, user.email);
     await this.updateRefreshToken(userId, tokens.refreshToken);
-    await this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
+    res.cookie('refresh_cookie', refreshToken, {
+      signed:true,
+      secure:true,
+    })
     return { access_token: tokens.accessToken };
   }
+
 }
