@@ -22,20 +22,22 @@ export class AuthController {
 
   @UseGuards(AccessTokenGuard)
   @Get("logout")
-  async logout(@Req() req: Request) {
-    return this.authService.logout(req.user["sub"]);
+  async logout(@Req() req: Request, @Res() res: Response) {
+    res.cookie("refresh_token", "");
   }
 
   @UseGuards(RefreshTokenGuard)
   @Post("refresh")
-  async refreshTokens(@Req() req: Request, @Res({passthrough: true}) res: Response) {
+  async refreshTokens(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
     const userId = req.user["sub"];
-    const refreshToken = req.signedCookies.refresh_token;
-    return this.authService.refreshToken(userId, refreshToken, res);
+    return this.authService.refreshToken(userId, res);
   }
 
   @UseGuards(RefreshTokenGuard)
-  @Get("check-auth")
-  checkAuth() {
+  @Get("check")
+  async checkAuth(@Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const userId = req.user["sub"];
+    const { access_token } = await this.authService.refreshToken(userId, res);
+    return { access_token };
   }
 }

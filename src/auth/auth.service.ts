@@ -30,9 +30,7 @@ export class AuthService {
     });
     const tokens = await this.getTokens(newUser.id, newUser.email);
 
-    await this.updateRefreshToken(newUser.id, tokens.refreshToken);
-
-    await this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
+    this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
 
     return { access_token: tokens.accessToken };
   }
@@ -54,21 +52,10 @@ export class AuthService {
 
     const tokens = await this.getTokens(user.id, user.email);
 
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
 
     this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
 
     return { access_token: tokens.accessToken };
-  }
-
-  async logout(userId: number) {
-    this.prisma.user.update({ where: { id: userId }, data: { refreshToken: "" } });
-  }
-
-
-  async updateRefreshToken(userId: number, refreshToken: string) {
-    const hashedRefreshToken = await argon.hash(refreshToken);
-    return this.prisma.user.update({ where: { id: userId }, data: { refreshToken: hashedRefreshToken } });
   }
 
 
@@ -89,7 +76,7 @@ export class AuthService {
         },
         {
           secret: this.config.get<string>("JWT_ACCESS_SECRET"),
-          expiresIn: "15m"
+          expiresIn: "10h"
         }
       ),
       this.jwt.signAsync(
@@ -99,7 +86,7 @@ export class AuthService {
         },
         {
           secret: this.config.get<string>("JWT_REFRESH_SECRET"),
-          expiresIn: "7d"
+          expiresIn: "1m"
         }
       )
     ]);
@@ -110,22 +97,17 @@ export class AuthService {
     };
   }
 
-  async refreshToken(userId: number, refreshToken: string, res: Response) {
+  async refreshToken(userId: number, res: Response) {
     const user = await this.prisma.user.findUnique({
       where: {
         id: userId
       }
     });
 
-    if (!user || !user.refreshToken)
+    if (!user)
       throw new ForbiddenException("Access denied");
 
-    const refreshTokenMatches = await argon.verify(user.refreshToken, refreshToken);
-    console.log(user.refreshToken, refreshToken);
-    if (!refreshTokenMatches)
-      throw new ForbiddenException("Access denied");
     const tokens = await this.getTokens(userId, user.email);
-    await this.updateRefreshToken(userId, tokens.refreshToken);
     this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
     return { access_token: tokens.accessToken };
   }

@@ -14,12 +14,11 @@ model User {
   id        Int       @id @default(autoincrement())
   createdAt DateTime? @default(now())
 
-  email        String  @unique
-  firstName    String
-  lastName     String
-  hash         String
-  bio          String?
-  refreshToken String?
+  email     String  @unique
+  firstName String
+  lastName  String
+  hash      String
+  bio       String?
 
   @@map("users")
 }
