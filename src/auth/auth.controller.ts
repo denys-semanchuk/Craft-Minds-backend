@@ -24,6 +24,7 @@ export class AuthController {
   @Get("logout")
   async logout(@Req() req: Request, @Res() res: Response) {
     res.cookie("refresh_token", "");
+    return { message: "You've been successfully logged out" };
   }
 
   @UseGuards(RefreshTokenGuard)

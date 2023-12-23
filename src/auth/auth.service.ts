@@ -6,6 +6,7 @@ import { ConfigService } from "@nestjs/config";
 import * as argon from "argon2";
 import { Response } from "express";
 import { LoginDto } from "./dto/login.dto";
+import { User } from "@prisma/client";
 
 @Injectable()
 export class AuthService {
@@ -24,11 +25,10 @@ export class AuthService {
     const newUser = await this.prisma.user.create({
       data: {
         ...registerDto,
-        hash,
-        refreshToken: ""
+        hash
       }
     });
-    const tokens = await this.getTokens(newUser.id, newUser.email);
+    const tokens = await this.getTokens(newUser);
 
     this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
 
@@ -50,7 +50,7 @@ export class AuthService {
       throw new BadRequestException(`Invalid credentials`);
     }
 
-    const tokens = await this.getTokens(user.id, user.email);
+    const tokens = await this.getTokens(user);
 
 
     this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
@@ -62,17 +62,18 @@ export class AuthService {
   attachTokenCookie(key: string, value: string, res: Response) {
     return res.cookie(key, value, {
       httpOnly: true,
-      signed: true,
-      secure: true
+      signed: true
     });
   }
 
-  async getTokens(userId: number, email: string) {
+  async getTokens(user: User) {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwt.signAsync(
         {
-          sub: userId,
-          email
+          sub: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
         },
         {
           secret: this.config.get<string>("JWT_ACCESS_SECRET"),
@@ -81,12 +82,14 @@ export class AuthService {
       ),
       this.jwt.signAsync(
         {
-          sub: userId,
-          email
+          sub: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName
         },
         {
           secret: this.config.get<string>("JWT_REFRESH_SECRET"),
-          expiresIn: "1m"
+          expiresIn: "30d"
         }
       )
     ]);
@@ -107,7 +110,7 @@ export class AuthService {
     if (!user)
       throw new ForbiddenException("Access denied");
 
-    const tokens = await this.getTokens(userId, user.email);
+    const tokens = await this.getTokens(user);
     this.attachTokenCookie("refresh_token", tokens.refreshToken, res);
     return { access_token: tokens.accessToken };
   }
