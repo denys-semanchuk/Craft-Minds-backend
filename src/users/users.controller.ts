@@ -1,14 +1,16 @@
-import { Controller, Get, UseGuards } from "@nestjs/common";
+import { Controller, Get, Req, UseGuards } from "@nestjs/common";
 import { AccessTokenGuard } from "../auth/guards";
-
+import { UsersService } from "./users.service";
+import {Request} from 'express'
 @Controller("users")
 export class UsersController {
-  constructor() {
+  constructor(private usersService: UsersService) {
   }
 
   @Get("me")
   @UseGuards(AccessTokenGuard)
-  async getUsersProfile() {
-    return "Denys"
+  async getMyProfile(@Req() req: Request) {
+    const userId = req.user['sub']
+    return this.usersService.getMyProfile(userId)
   }
 }
