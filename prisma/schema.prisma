@@ -14,11 +14,39 @@ model User {
   id        Int       @id @default(autoincrement())
   createdAt DateTime? @default(now())
 
-  email     String  @unique
-  firstName String
-  lastName  String
-  hash      String
-  bio       String?
+  email        String    @unique
+  firstName    String
+  lastName     String
+  hash         String
+  bio          String?
+  sentMessages Message[] @relation("sender")
 
   @@map("users")
+}
+
+model Message {
+  id             Int          @id @default(autoincrement())
+  sendDatetime   DateTime?    @default(now())
+  senderId       Int
+  content        String
+  sender         User         @relation(name: "sender", fields: [senderId], references: [id])
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+
+  @@map("messages")
+}
+
+model Conversation {
+  id                 Int              @id @default(autoincrement())
+  conversationName   String
+  conversationAvatar String
+  type               ConversationType
+  Message            Message[]
+
+  @@map("conversations")
+}
+
+enum ConversationType {
+  PRIVATE
+  GROUP
 }
