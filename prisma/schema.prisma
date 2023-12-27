@@ -11,39 +11,47 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime? @default(now())
+  id            Int            @id @default(autoincrement())
+  createdAt     DateTime       @default(now())
+  email         String         @unique
+  firstName     String
+  lastName      String
+  hash          String
+  bio           String?
+  conversations Conversation[] @relation("UserParticipants")
+  sentMessages  Message[]      @relation("sender")
 
-  email        String    @unique
-  firstName    String
-  lastName     String
-  hash         String
-  bio          String?
-  sentMessages Message[] @relation("sender")
-
-  @@map("users")
+  participant Participant[]
 }
 
 model Message {
   id             Int          @id @default(autoincrement())
-  sendDatetime   DateTime?    @default(now())
+  sendDatetime   DateTime     @default(now())
   senderId       Int
   content        String
   sender         User         @relation(name: "sender", fields: [senderId], references: [id])
   conversationId Int
   conversation   Conversation @relation(fields: [conversationId], references: [id])
-
-  @@map("messages")
 }
 
 model Conversation {
   id                 Int              @id @default(autoincrement())
   conversationName   String
-  conversationAvatar String
+  conversationAvatar String?
   type               ConversationType
-  Message            Message[]
+  messages           Message[]
+  participant        Participant[]
+  user               User?            @relation(name: "UserParticipants", fields: [userId], references: [id])
+  userId             Int?
+}
 
-  @@map("conversations")
+model Participant {
+  id             Int          @id @default(autoincrement())
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  conversationId Int
+
+  participantId Int
+  participant   User @relation(fields: [participantId], references: [id])
 }
 
 enum ConversationType {
