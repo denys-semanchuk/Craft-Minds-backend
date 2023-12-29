@@ -6,16 +6,19 @@ import {
   IsStrongPassword,
   MinLength
 } from "class-validator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class LoginDto extends ValidationPipe {
 
   @IsString()
   @IsEmail()
+  @ApiProperty()
   public email: string;
 
   @IsNotEmpty()
   @MinLength(8)
   @IsStrongPassword()
+  @ApiProperty()
   public password: string;
 
 }
