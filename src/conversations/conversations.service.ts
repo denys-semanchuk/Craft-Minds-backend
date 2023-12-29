@@ -7,6 +7,10 @@ export class ConversationsService {
   constructor(private prisma: PrismaService) {
   }
 
+  async uploadConversationAvatar() {
+
+  }
+
 
   async getMyConversations(userId: number, type: "PRIVATE" | "GROUP" = "PRIVATE") {
     const user = await this.prisma.user.findUnique({
@@ -30,6 +34,19 @@ export class ConversationsService {
 
   }
 
+  async findConversation(conversationId: number, userId: number) {
+    return this.prisma.conversation.findUnique({
+      where: {
+        id: conversationId,
+        participants: {
+          some: {
+            id: userId
+          }
+        }
+      }
+    });
+  }
+
   async createConversation(createConversationDto: CreateConversationDto) {
     const { type, participantIds, conversationName, conversationAvatar } = createConversationDto;
     return this.prisma.conversation.create({
@@ -44,27 +61,27 @@ export class ConversationsService {
     });
   }
 
-  async getMessages({ userId, conversationId }: { userId: number, conversationId: number }) {
-    const conversation = await this.prisma.conversation.findUnique({
-      where: {
-        id: conversationId,
-        AND: {
-          participants: {
-            some: {
-              id: userId
-            }
-          }
-        }
-      }
-    });
-    const user = await this.prisma.user.findUnique({ where: { id: userId } });
-
-    if (!conversation || !user) throw new BadRequestException("Bad Request Error");
+  async getMessages({ conversationId }: { conversationId: number }) {
 
     return this.prisma.message.findMany({
       where: {
         conversationId
       }
-    })
+    });
+  }
+
+  async createMessage({ conversationId, userId, content }: {
+    conversationId: number,
+    userId: number,
+    content: string
+  }) {
+
+    return this.prisma.message.create({
+      data: {
+        content,
+        conversationId,
+        senderId: userId
+      }
+    });
   }
 }
