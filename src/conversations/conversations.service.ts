@@ -44,7 +44,27 @@ export class ConversationsService {
     });
   }
 
-  async getMessages() {
+  async getMessages({ userId, conversationId }: { userId: number, conversationId: number }) {
+    const conversation = await this.prisma.conversation.findUnique({
+      where: {
+        id: conversationId,
+        AND: {
+          participants: {
+            some: {
+              id: userId
+            }
+          }
+        }
+      }
+    });
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
 
+    if (!conversation || !user) throw new BadRequestException("Bad Request Error");
+
+    return this.prisma.message.findMany({
+      where: {
+        conversationId
+      }
+    })
   }
 }

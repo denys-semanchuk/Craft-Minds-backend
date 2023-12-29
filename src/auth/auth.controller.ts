@@ -41,4 +41,5 @@ export class AuthController {
     const { access_token } = await this.authService.refreshToken(userId, res);
     return { access_token };
   }
+
 }

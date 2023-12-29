@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from "@nestjs/common";
 import { ConversationsService } from "./conversations.service";
 import { AccessTokenGuard } from "../auth/guards";
 import { Request } from "express";
@@ -21,5 +21,13 @@ export class ConversationsController {
   @UseGuards(AccessTokenGuard)
   async createConversation(@Body() createConversationDto: CreateConversationDto) {
     return this.conversationsService.createConversation(createConversationDto);
+  }
+
+  @Get(":id/messages")
+  @UseGuards(AccessTokenGuard)
+  async getMessages(@Req() req: Request, @Param() params: Parameters<any>) {
+    const userId = req.user["sub"];
+    const conversationId = Number(params["id"]);
+    return this.conversationsService.getMessages({ userId, conversationId })
   }
 }
