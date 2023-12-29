@@ -31,11 +31,12 @@ export class ConversationsService {
   }
 
   async createConversation(createConversationDto: CreateConversationDto) {
-    const { participantIds } = createConversationDto;
+    const { type, participantIds, conversationName, conversationAvatar } = createConversationDto;
     return this.prisma.conversation.create({
       data: {
-        type: "GROUP",
-        conversationName: "De",
+        type,
+        conversationName,
+        conversationAvatar,
         participants: {
           connect: participantIds.map(id => ({ id }))
         }

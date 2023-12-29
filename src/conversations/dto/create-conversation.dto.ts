@@ -1,8 +1,18 @@
 import { ValidationPipe } from "@nestjs/common";
-import { IsArray } from "class-validator";
+import { IsArray, IsOptional, IsString } from "class-validator";
+import { ConversationType } from "@prisma/client";
 
-export class CreateConversationDto extends ValidationPipe{
-
+export class CreateConversationDto extends ValidationPipe {
   @IsArray()
-  public participantIds: number[]
+  public participantIds: number[];
+
+  @IsString()
+  public conversationName: string;
+
+  @IsString()
+  @IsOptional()
+  public conversationAvatar: string;
+
+  @IsString()
+  public type: ConversationType;
 }
