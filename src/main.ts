@@ -18,6 +18,7 @@ async function bootstrap() {
     credentials:true,
     origin: 'http://localhost:3000'
   })
+
   const options = new DocumentBuilder()
     .setTitle('My API')
     .setDescription('API description')

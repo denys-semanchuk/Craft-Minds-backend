@@ -7,7 +7,7 @@ export class ConversationsService {
   constructor(private prisma: PrismaService) {
   }
 
-  async uploadConversationAvatar() {
+  async uploadAvatar() {
 
   }
 
