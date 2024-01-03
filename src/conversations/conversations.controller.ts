@@ -18,17 +18,18 @@ import { CreateConversationDto } from "./dto/create-conversation.dto";
 import { CreateMessageDto } from "./dto/create-message.dto";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { diskStorage } from "multer";
+import { ConversationType } from "@prisma/client";
 
 @Controller("api/chats")
-// @UseGuards(AccessTokenGuard)
+@UseGuards(AccessTokenGuard)
 export class ConversationsController {
   constructor(private conversationsService: ConversationsService) {
   }
 
-  @Get()
-  async getMyChats(@Req() req: Request) {
+  @Get("my/:type")
+  async getMyChats(@Req() req: Request, @Param("type") type: string) {
     const userId = req.user["sub"] as number;
-    return this.conversationsService.getMyConversations(userId);
+    return this.conversationsService.getMyConversations(userId, type.toUpperCase() as ConversationType);
   }
 
 
@@ -70,7 +71,7 @@ export class ConversationsController {
       new MaxFileSizeValidator({ maxSize: 200000 })
     ]
   })) file: Express.Multer.File) {
-    console.log(file);
+    return file.path;
   }
 
 }
